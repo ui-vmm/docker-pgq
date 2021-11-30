@@ -42,10 +42,11 @@ RUN set -ex && \
     su postgres -c 'pg_ctl -D /tempdb --mode=immediate stop' && \
     rm -rf /tempdb && \
     pgqd --ini | sed \
+    -e 's|.*base_connstr .*|base_connstr = user=postgres|g' \
     -e 's|logfile .*|logfile = /tmp/pgqd.log|g' \
     -e 's|pidfile .*|pidfile = /tmp/pgqd.pid|g' > /etc/pgqd.ini && \
     mkdir -p /docker-entrypoint-initdb.d
 
-RUN sed -i "s|_main |su postgres -c 'pgqd /etc/pgqd.ini' \&\n\t_main |" /usr/local/bin/docker-entrypoint.sh
+RUN sed -i "s|_main |exec gosu postgres /usr/local/bin/pgqd /etc/pgqd.ini \&\n\t_main |" /usr/local/bin/docker-entrypoint.sh
 
 COPY ./initdb-pgq.sh /docker-entrypoint-initdb.d/10_pgq.sh
