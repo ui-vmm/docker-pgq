@@ -1,0 +1,33 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  VOLUME_BIND: /tmp
+  PORT_PUBLISH: 5432
+  PGPASSWORD: pass
+  CONTEINER_VERSION: 3.4.2
+  PROJECT: git.jzzi.ru/ui-vmm/ui-vmm
+
+tasks:
+  default:
+    deps: [start]
+
+  start:
+    desc: Starts the postgres database
+    deps:
+      - task: cleanup
+    cmds:
+      - cmd: >
+          docker run --name postgres
+          -e POSTGRES_PASSWORD={{.PGPASSWORD}}
+          -e PGDATA=/var/lib/postgresql/data/pgdata
+          -v {{.VOLUME_BIND}}:/var/lib/postgresql/data
+          -p {{.PORT_PUBLISH}}:5432 -d
+          uivmm/docker-pgq:{{.CONTEINER_VERSION}}
+
+  cleanup:
+    desc: Destroying the postgresql database
+    cmds:
+      - cmd: docker rm -f postgres
+        ignore_error: true
